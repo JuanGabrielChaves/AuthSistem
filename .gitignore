@@ -1,0 +1,28 @@
+# --- Directorios de compilación ---
+[Bb]in/
+[Oo]bj/
+
+# --- Configuración de Visual Studio ---
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
+
+# --- Archivos de Base de Datos locales ---
+*.mdf
+*.ldf
+*.sdf
+
+# --- CONFIGURACIÓN SENSIBLE (SEGURIDAD) ---
+# No subas tus secretos de producción o locales
+**/appsettings.Development.json
+**/appsettings.Local.json
+
+# --- Carpetas de paquetes ---
+packages/
+node_modules/
+.pnpm-store/
+
+# --- Otros ---
+.DS_Store
+Thumbs.db
