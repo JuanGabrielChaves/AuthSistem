@@ -1,8 +1,10 @@
-using System.IdentityModel.Tokens.Jwt; // Asegúrate de tener este using
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using CleanArchitecture.Application.Abstractions;
 using CleanArchitecture.Domain.Entities;
+using CleanArchitecture.Infrastructure.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
@@ -11,21 +13,32 @@ namespace CleanArchitecture.Infrastructure.Authentication;
 internal sealed class JwtProvider : IJwtProvider
 {
     private readonly IConfiguration _configuration;
+    private readonly UserManager<UserIdentity> _userManager; // Inyectamos UserManager
 
-    public JwtProvider(IConfiguration configuration)
+    public JwtProvider(IConfiguration configuration, UserManager<UserIdentity> userManager)
     {
         _configuration = configuration;
+        _userManager = userManager;
     }
 
-    public string Generate(ApplicationUser user)
+    public async Task<string> Generate(UserIdentity user)
     {
-        // Cambiado de JwtLibRegisteredClaimNames a JwtRegisteredClaimNames
-        var claims = new Claim[] {
-            new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new(JwtRegisteredClaimNames.Email, user.Email),
-            new("firstName", user.FirstName),
-            new("lastName", user.LastName)
-        };
+        var userFromDb = await _userManager.FindByIdAsync(user.Id);
+        var targetUser = userFromDb ?? user;
+        var roles = await _userManager.GetRolesAsync(targetUser);
+
+        var claims = new List<Claim> {
+        new(JwtRegisteredClaimNames.Sub, targetUser.Email!),
+        new(JwtRegisteredClaimNames.Email, targetUser.Email!),
+        new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+        new(ClaimTypes.NameIdentifier, targetUser.Id)
+    };
+
+        // 2. Agregar roles con el nombre largo para que coincida con tu DependencyInjection actual
+        foreach (var role in roles)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, role));
+        }
 
         var secretKey = _configuration["Jwt:SecretKey"]!;
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
@@ -36,7 +49,7 @@ internal sealed class JwtProvider : IJwtProvider
             _configuration["Jwt:Audience"],
             claims,
             null,
-            DateTime.UtcNow.AddHours(1),
+            DateTime.UtcNow.AddHours(8),
             creds
         );
 

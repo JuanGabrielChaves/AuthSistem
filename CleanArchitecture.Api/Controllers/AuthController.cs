@@ -1,6 +1,7 @@
 using CleanArchitecture.Application.Commands.Users;
 using CleanArchitecture.Application.Queries;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 
@@ -36,5 +37,17 @@ public class AuthController : ControllerBase
         {
             return Unauthorized(ex.Message);
         }
+    }
+
+    [HttpPost("assign-role")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> AssignRole([FromBody] AssignRoleCommand command)
+    {
+        var result = await _mediator.Send(command);
+
+        if (!result.IsSuccess)
+            return BadRequest(new { error = result.Error.Message });
+
+        return Ok(new { message = $"Rol {command.RoleName} asignado correctamente a {command.Email}" });
     }
 }

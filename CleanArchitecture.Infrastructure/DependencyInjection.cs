@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer; // Necesario para los esque
 using Microsoft.IdentityModel.Tokens; // Necesario para TokenValidationParameters
 using System.Text;
 using CleanArchitecture.Infrastructure.Models;
+using System.Security.Claims;
 
 public static class DependencyInjection
 {
@@ -50,7 +51,7 @@ public static class DependencyInjection
                 ValidateIssuer = true,
                 ValidateAudience = true,
                 NameClaimType = "sub",
-                RoleClaimType = "role",
+                RoleClaimType = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role",
                 ValidateLifetime = true,
                 ValidateIssuerSigningKey = true,
                 ValidIssuer = configuration["Jwt:Issuer"],

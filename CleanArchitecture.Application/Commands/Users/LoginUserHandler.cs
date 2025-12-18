@@ -1,58 +1,22 @@
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
+using CleanArchitecture.Application.Abstractions;
 using MediatR;
-using CleanArchitecture.Infrastructure.Models;
 
 namespace CleanArchitecture.Application.Commands.Users
 {
     public class LoginUserHandler : IRequestHandler<LoginUserCommand, string>
     {
-        private readonly UserManager<UserIdentity> _userManager;
-        private readonly IConfiguration _configuration;
+        private readonly IAuthService _authService;
 
-        public LoginUserHandler(UserManager<UserIdentity> userManager, IConfiguration configuration)
+        public LoginUserHandler(IAuthService authService)
         {
-            _userManager = userManager;
-            _configuration = configuration;
+            _authService = authService;
         }
 
         public async Task<string> Handle(LoginUserCommand request, CancellationToken cancellationToken)
         {
-            var user = await _userManager.FindByEmailAsync(request.Email);
-
-            if (user == null || !await _userManager.CheckPasswordAsync(user, request.Password))
-            {
-                throw new UnauthorizedAccessException("Credenciales incorrectas");
-            }
-
-            return GenerateJwtToken(user);
-        }
-
-        private string GenerateJwtToken(UserIdentity user)
-        {
-            var claims = new[]
-            {
-                new Claim(JwtRegisteredClaimNames.Sub, user.Email!),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(ClaimTypes.NameIdentifier, user.Id)
-            };
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"]!));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Audience"],
-                claims: claims,
-                expires: DateTime.Now.AddHours(3),
-                signingCredentials: creds
-            );
-
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            // Delegamos toda la lógica al servicio que ya configuramos con roles
+            // Este método internamente llama al JwtProvider que SÍ incluye los roles
+            return await _authService.LoginAsync(request.Email, request.Password);
         }
     }
 }
