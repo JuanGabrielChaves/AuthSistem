@@ -21,7 +21,7 @@ public class ApplicationDbContext : IdentityDbContext<UserIdentity>
         // Esto asegura que EF vea las propiedades de la clase base
         modelBuilder.Entity<Product>(entity =>
         {
-            entity.Property(p => p.CreatedAt).IsRequired();
+            entity.Property(p => p.CreatedOnUtc).IsRequired();
             entity.Property(p => p.CreatedBy).HasMaxLength(200);
             entity.Property(p => p.Price).HasColumnType("decimal(18,2)");
         });
@@ -55,16 +55,16 @@ public class ApplicationDbContext : IdentityDbContext<UserIdentity>
         {
             if (entry.State == EntityState.Added)
             {
-                entry.Entity.CreatedAt = timestamp;
+                entry.Entity.CreatedOnUtc = timestamp;
                 entry.Entity.CreatedBy = userEmail;
             }
             else // State == EntityState.Modified
             {
-                entry.Entity.LastModifiedAt = timestamp;
-                entry.Entity.LastModifiedBy = userEmail;
+                entry.Entity.ModifiedOnUtc = timestamp;
+                entry.Entity.ModifiedBy = userEmail;
 
                 // IMPORTANTE: Evita que EF intente actualizar la fecha de creación original
-                entry.Property(x => x.CreatedAt).IsModified = false;
+                entry.Property(x => x.CreatedOnUtc).IsModified = false;
                 entry.Property(x => x.CreatedBy).IsModified = false;
             }
         }

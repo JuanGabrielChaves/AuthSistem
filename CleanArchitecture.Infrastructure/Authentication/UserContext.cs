@@ -1,21 +1,29 @@
 using System.Security.Claims;
+using CleanArchitecture.Application.Abstractions;
 using Microsoft.AspNetCore.Http;
 
 namespace CleanArchitecture.Infrastructure.Authentication;
 
-public class UserContext(IHttpContextAccessor httpContextAccessor) : IUserContext
+public sealed class UserContext : IUserContext
 {
-    public string? UserEmail
+    private readonly IHttpContextAccessor _httpContextAccessor;
+
+    public UserContext(IHttpContextAccessor httpContextAccessor)
+    {
+        _httpContextAccessor = httpContextAccessor;
+    }
+
+    // Implementación obligatoria de UserEmail
+    public string? UserEmail =>
+        _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.Email) ??
+        _httpContextAccessor.HttpContext?.User?.FindFirstValue("email");
+
+    public Guid UserId
     {
         get
         {
-            var user = httpContextAccessor.HttpContext?.User;
-
-            // Al limpiar el mapeo arriba, el email ahora estará en "sub"
-            return user?.FindFirstValue("sub")
-                   ?? user?.FindFirstValue(ClaimTypes.NameIdentifier)
-                   ?? user?.FindFirstValue(ClaimTypes.Email)
-                   ?? "System";
+            var userId = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            return Guid.TryParse(userId, out var guid) ? guid : Guid.Empty;
         }
     }
 }

@@ -23,7 +23,7 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
             Price = request.Price
         };
 
-        // 2. Persistir (EF se encargará de CreatedAt/By automáticamente)
+        // 2. Persistir (EF se encargará de CreatedOnUtc/By automáticamente)
         await _repository.AddAsync(product);
 
         // 3. Devolver éxito con el ID

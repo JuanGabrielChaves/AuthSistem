@@ -70,6 +70,15 @@ public static class DependencyInjection
 
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IJwtProvider, JwtProvider>();
+        services.AddScoped<UpdateAuditableEntitiesInterceptor>();
+
+        services.AddDbContext<ApplicationDbContext>((sp, options) =>
+        {
+            var interceptor = sp.GetRequiredService<UpdateAuditableEntitiesInterceptor>();
+
+            options.UseSqlServer(connectionString)
+                   .AddInterceptors(interceptor);
+        });
 
         return services;
     }
