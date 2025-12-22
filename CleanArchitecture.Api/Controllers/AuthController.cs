@@ -30,15 +30,14 @@ public class AuthController : ControllerBase
     {
         try
         {
-            var token = await _mediator.Send(command);
-            return Ok(new { AccessToken = token });
+            var tokenResponse = await _mediator.Send(command);
+            return Ok(tokenResponse);
         }
         catch (Exception ex)
         {
-            return Unauthorized(ex.Message);
+            return Unauthorized(new { error = ex.Message });
         }
     }
-
     [HttpPost("assign-role")]
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> AssignRole([FromBody] AssignRoleCommand command)
@@ -49,5 +48,19 @@ public class AuthController : ControllerBase
             return BadRequest(new { error = result.Error.Message });
 
         return Ok(new { message = $"Rol {command.RoleName} asignado correctamente a {command.Email}" });
+    }
+
+    [HttpPost("refresh")]
+    public async Task<IActionResult> Refresh([FromBody] RefreshTokenCommand command)
+    {
+        try
+        {
+            var response = await _mediator.Send(command);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return Unauthorized(new { message = ex.Message, detail = ex.InnerException?.Message });
+        }
     }
 }

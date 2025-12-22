@@ -1,9 +1,11 @@
 using CleanArchitecture.Application.Abstractions;
+
 using MediatR;
 
 namespace CleanArchitecture.Application.Commands.Users
 {
-    public class LoginUserHandler : IRequestHandler<LoginUserCommand, string>
+    // Cambiamos el retorno de string a TokenResponse
+    public class LoginUserHandler : IRequestHandler<LoginUserCommand, TokenResponse>
     {
         private readonly IAuthService _authService;
 
@@ -12,10 +14,9 @@ namespace CleanArchitecture.Application.Commands.Users
             _authService = authService;
         }
 
-        public async Task<string> Handle(LoginUserCommand request, CancellationToken cancellationToken)
+        public async Task<TokenResponse> Handle(LoginUserCommand request, CancellationToken cancellationToken)
         {
-            // Delegamos toda la lógica al servicio que ya configuramos con roles
-            // Este método internamente llama al JwtProvider que SÍ incluye los roles
+            // El servicio ahora debe encargarse de generar ambos tokens
             return await _authService.LoginAsync(request.Email, request.Password);
         }
     }
